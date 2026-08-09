@@ -1,0 +1,19 @@
+body { margin: 0; overflow: hidden; background-color: #222; color: white; font-family: Arial, sans-serif; }
+#game-container { position: relative; width: 100vw; height: 100vh; }
+#score { position: absolute; top: 10px; left: 10px; font-size: 24px; }
+#word { position: absolute; top: 10px; left: 300px; font-size: 64px; color: #09f;}
+
+.letter {
+    position: absolute;
+    font-size: 32px;
+    font-weight: bold;
+    color: #0f0; /* 緑色 */
+    user-select: none;
+    top: -50px; /* 画面外からスタート */
+    animation: fall linear forwards;
+}
+
+@keyframes fall {
+    to { transform: translateY(100vh); } /* 下まで落ちる */
+}
+
