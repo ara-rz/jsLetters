@@ -295,47 +295,63 @@ function next_offset(t, n)
     return n*32;
   } 
 }
-function code2n(code)
+function code2n(code2)
 {// とりあえず 0〜31 を予約 
-	if (code < 39) {
-	    if (code == 32) { return 0; }// space
+	if (code2 < 39) {
+	    if (code2 == 32) { return 0; }// space
 		return 95; // "_"
-	} else if (code < 65) {
-		return code;
-	} else if (code < 91) {
-		return code - 59;
-	} else if (code < 186) {
-		return code;
-	} else if (code <= 192) {
-		if (code == 188) { return 1; }//,
-		if (code == 190) { return 2; }//.
-		if (code == 191) { return 3; }//slash(/)
-		if (code == 186) { return 4; }//:
-		if (code == 187) { return 5; }//;
+	} else if (code2 < 65) {
+		return code2;
+	} else if (code2 < 91) {
+		return code2 - 59;
+	} else if (code2 < 186) {
+		return code2;
+	} else if (code2 <= 192) {
+		if (code2 == 188) { return 1; }//,
+		if (code2 == 190) { return 2; }//.
+		if (code2 == 191) { return 3; }//slash(/)
+		if (code2 == 186) { return 4; }//:
+		if (code2 == 187) { return 5; }//;
 	}
-	return code;
+	return code2;
 }
 function Tut()
 {
     this.buf = '';
 	this.tbl = 0; // 現在使用しているテーブル番号 
-	this.stroke = 0; // 現在バッファにたまっているキーストローク数 
-	this.feed = function(code)
-	{
-		var n = code2n(code);
-		var c = Tbl[this.tbl].charAt(n);
-		if (c == '/')
-		{
-		  this.buf += Code2char.charAt(n);
-		  if (this.stroke == 0) {
-		    this.tbl = n;
-		  } else {
-		    this.tbl = TblTable[this.buf];
-		  }
-		  if (++this.stroke > 2) {
-		    this.tbl = this.stroke = 0;this.buf = '';
-		  }
-		  return '';
+	this.stroke = 0; // 現在バッファにたまっているキーストローク数
+	this.feed = function(code) {
+		let n = code2n(code);
+        //console.log("Code: ", code, " ", n);
+        if (code == 8) { // BackSpaceを「前文字消し」として特別扱い
+            if (this.buf.length == 0) {
+                return '^H';
+            } else {
+                this.buf = this.buf.replace(/.$/,"") // JavaScriptのchop!に該当する関数がわからない…
+                return '';
+            }
+        } else if (code == 27) { // Ctrl+G ESCAPE バッファクリアの特別扱い
+            if (this.buf.length == 0) {
+                return '^G';
+            } else {
+                this.buf = ''
+                return '';
+            }
+        } else if (code < 32) {
+            return '';
+        }
+		let c = Tbl[this.tbl].charAt(n);
+		if (c == '/') {
+		    this.buf += Code2char.charAt(n);
+		    if (this.stroke == 0) {
+		        this.tbl = n;
+		    } else {
+		        this.tbl = TblTable[this.buf];
+		    }
+		    if (++this.stroke > 2) {
+		        this.tbl = this.stroke = 0;this.buf = '';
+		    }
+		    return '';
 		} else {
 		  this.tbl = this.stroke = 0;this.buf = '';
 		  return c;

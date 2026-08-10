@@ -1,15 +1,34 @@
-body { margin: 0; overflow: hidden; background-color: #222; color: white; font-family: Arial, sans-serif; }
-#game-container { position: relative; width: 100vw; height: 100vh; }
-#score { position: absolute; top: 10px; left: 10px; font-size: 24px; }
-#word { position: absolute; top: 10px; left: 300px; font-size: 64px; color: #09f;}
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background-image: url(../../g/0_03.jpg);
+}
+.opaque { /* 背景画を隠す為の 柱状(半透明)ブラインドの定義 */
+	background: rgba(255,192,192); /* ,0.95); */
+	width: 5%; /* 要素の横幅を全体の1／20 */
+	height: 100%;
+    position: absolute;
+    user-select: none;
+	z-index: 50; /* 要素を 背景画よりは前面に、落ちる文字列よりは背面に */
+}
 
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+#score { position: absolute; top: 8px; left: 10px; font-size: 24px; z-index: 200;}
+#word  { position: absolute; top: 8px; left: 360px; font-size: 64px; color: #3df; background-color: #511; z-index: 200;}
+#word2 { position: absolute; top: 8px; left: 300px; font-size: 32px; color: #243; background-color: #faf; z-index: 200;} /* 入力途中アルファベット表示用 */
 .letter {
     position: absolute;
     font-size: 32px;
     font-weight: bold;
-    color: #0f0; /* 緑色 */
+    color: #2e0; /* 緑色 */
     user-select: none;
     top: -50px; /* 画面外からスタート */
+    z-index: 100;
     animation: fall linear forwards;
 }
 
