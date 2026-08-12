@@ -24,11 +24,20 @@ body {
     position: absolute;
     font-size: 32px;
     font-weight: bold;
-    color: #2e0; /* 緑色 */
     user-select: none;
     top: -50px; /* 画面外からスタート */
     z-index: 100;
     animation: fall linear forwards;
+}
+.letterBase {
+    position: absolute;    
+    color: #2e0; /* 緑色 */
+    z-index: 101;
+}
+.letterMatch {
+    position: absolute;
+    color: #901; /* 赤色 */
+    z-index: 102;
 }
 
 @keyframes fall {

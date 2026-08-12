@@ -2,7 +2,7 @@ const container = document.getElementById('game-container');
 const scoreElement = document.getElementById('score');
 const wordElement = document.getElementById('word');
 const word2Element = document.getElementById('word2');
-const blindNum = 7;// 背景画像を隠す為の ブライド(縦長の柱状の覆い)の数 
+const blindNum = 16;// 背景画像を隠す為の ブライド(縦長の柱状の覆い)の数 
 let imgIdx = 0;    // スライドショー表示する背景画の現在の番号
 let bonusIdx = 0;  // スライドショー変化させる為のカウンター
 //const words = ["abc","def","ghi","jkl"];
@@ -23,17 +23,24 @@ let inputWord = ""
 // 1. ドロップする「単語」を一つ生成する関数
 function dropWord() {
     const letter = document.createElement('div');
+    const ltBase = document.createElement('span');
+    const ltMtch = document.createElement('span');
     const word = words[Math.floor(Math.random() * words.length)];
-    letter.innerText = word;
+    ltBase.innerText = word;
+    ltBase.className = 'letterBase';
+    ltMtch.className = 'letterMatch';
+    ltMtch.innerText = "";
     letter.className = 'letter';
     // ランダムな位置から落とす
     letter.style.left = Math.random() * (window.innerWidth - 50) + 'px';
     // ランダムな速度（10秒〜19秒で落ちる様に…）
     const duration = 10 + Math.random() * 9;
     letter.style.animationDuration = duration + 's';
+    letter.appendChild(ltMtch); letter.appendChild(ltBase);
     container.appendChild(letter);
     activeWords.push({
         element: letter,
+        mtch: ltMtch,
         word: word
     });
     // 下まで到達したら削除
@@ -61,38 +68,53 @@ document.addEventListener('keydown', (e) => {
     } else if (kChar == "^G") { // Cancel
         inputWord = '';
     } else {
-        inputWord += kChar; //inputWord += e.key;
+        inputWord += kChar;
     }
     // 入力された単語が、現在落下中の単語群のどれかと一致するか確認
-    // (ここでは簡単のため、最初に見つかった単語のみ消す)
-    const index = activeWords.findIndex(l => l.word === inputWord);
-    if (index !== -1) {
-        const target = activeWords[index];
-        let idx = Math.floor( (parseInt(target.element.style.left) + inputWord.length*32/2) *blindNum /window.innerWidth ); /* 落下単語が存在したあたりの ブラインドの番号を調べる */
-        //console.log(" idx = ", idx);
-        if (idx >= 0 && idx < blindNum) {
+    let rmWords = [];//一致した単語を消す為の準備
+    for (var i in activeWords) {
+        let w = activeWords[i];
+        if (w.word.indexOf(inputWord) == 0) {
+            if (inputWord === w.word) { //完全一致した場合は消去予約
+                rmWords.push(i);
+            } else {
+                w.mtch.innerText = inputWord;//入力文字とマッチした先頭部分を色付け表示
+            }
+        } else {
+            w.mtch.innerText = '';
+        }
+    }
+    let preScore = score;
+    for (var i in rmWords.reverse()) { //消去予約した単語を消す(画面と配列の両方)(配列がおかしくならない様に、後ろから処理)
+        let w = activeWords[rmWords[i]];
+        let blindI = Math.floor( (parseInt(w.element.style.left) + 16) *blindNum /window.innerWidth ); // 落下単語が存在したあたりの ブラインドの番号を調べる
+        if (blindI >= 0 && blindI < blindNum) {
             ;
         } else {
-            idx=10;
+            blindI=10;
         }
-        target.element.remove(); // 画面から削除
-        activeWords.splice(index, 1); // 配列から削除
+        w.element.remove(); // 画面から削除
+        activeWords.splice(rmWords[i], 1);
         score += 10;
-        inputWord = ""
-        scoreElement.innerText = 'Score: ' + score;
-        blinds[idx].style.opacity = "0.4"; /* 該当ブラインドを透明にする */
+        let fl = parseFloat(blinds[blindI].style.opacity) - 0.3; // 該当ブラインドを透け透けにしてゆく
+        if (fl < 0) fl = 0;
+        blinds[blindI].style.opacity = fl.toString();
         bonusIdx++;
+    }
+    if (preScore != score) { //スコアの変動があった場合(落ち単語のどれかが消えた場合)
         console.log(" bonusIdx = ", bonusIdx);
-        if (bonusIdx > blindNum+4) {
+        if (bonusIdx > blindNum+6) {
             bonusIdx = 0;
             if (++imgIdx >= images.length) {
                 imgIdx = 0;
             }
-            document.body.style.backgroundImage = 'url("'+images[imgIdx]+'")';
-            for (let i = 0; i < blinds.length; i++) { blinds[i].style.opacity = "0.93"; }
-        } else if (bonusIdx > blindNum+2) { /* クリアした単語が 閾値を越えたら、ボーナスで全ブラインドを透明にする */
+            document.body.style.backgroundImage = 'url("'+images[imgIdx]+'")'; // 背景画像を一個進める
+            for (let i = 0; i < blinds.length; i++) { blinds[i].style.opacity = "0.93"; } //全ブラインドを (ほぼ)不透明にリセット
+        } else if (bonusIdx > blindNum+3) { // クリアした単語が 閾値を越えたら、ボーナスで全ブラインドを透明にする
             for (let i = 0; i < blinds.length; i++) { blinds[i].style.opacity = "0.1"; }
         } 
+        scoreElement.innerText = 'Score: ' + score;
+        inputWord = ""
     }
     wordElement.innerText = inputWord;
     word2Element.innerText = tut.buf; /* 入力しかけのテンポラリーアルファベット */
