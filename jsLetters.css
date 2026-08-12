@@ -2,7 +2,7 @@ body {
     margin: 0;
     overflow: hidden;
     font-family: Arial, sans-serif;
-    background-image: url(../../g/0_03.jpg);
+    background-image: url(img/0.jpg);
 }
 .opaque { /* 背景画を隠す為の 柱状(半透明)ブラインドの定義 */
 	background: rgba(255,192,192);
@@ -25,9 +25,7 @@ body {
     font-size: 32px;
     font-weight: bold;
     user-select: none;
-    top: -50px; /* 画面外からスタート */
     z-index: 100;
-    animation: fall linear forwards;
 }
 .letterBase {
     position: absolute;    
@@ -39,8 +37,8 @@ body {
     color: #901; /* 赤色 */
     z-index: 102;
 }
-
+/*
 @keyframes fall {
-    to { transform: translateY(100vh); } /* 下まで落ちる */
+    to { transform: translateY(100vh); }
 }
-
+*/

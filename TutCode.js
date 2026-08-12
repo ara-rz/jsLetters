@@ -329,10 +329,12 @@ function Tut()
             } else {
                 this.stroke--;
                 this.buf = this.buf.replace(/.$/,"") // JavaScriptのchop!に該当する関数がわからない…
-                if (this.stroke == 0) {
+                if (this.stroke == 1) {
 		            this.tbl = n;
-		        } else {
-		            this.tbl = TblTable[this.buf];
+                } else if (this.stroke == 2 && tblTable[this.buf]) {
+                    this.tbl = TblTable[this.buf];
+                } else {
+		            this.tbl = this.stroke = 0;this.buf = '';                    
 		        }
                 return '';
             }
@@ -343,6 +345,8 @@ function Tut()
                 this.tbl = this.stroke = 0;this.buf = '';
                 return '';
             }
+        } else if (code == 9 || code == 38) {// TAB もしくは 「↑」上方向キーで Play/Pause 
+            return '^P';
         } else if (code < 32) {
             return '';
         }
