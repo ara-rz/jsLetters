@@ -2,18 +2,23 @@ const container = document.getElementById('game-container');
 const scoreElement = document.getElementById('score');
 const wordElement = document.getElementById('word');
 const word2Element = document.getElementById('word2');
+const blindNum = 7;// 背景画像を隠す為の ブライド(縦長の柱状の覆い)の数 
+let imgIdx = 0;    // スライドショー表示する背景画の現在の番号
+let bonusIdx = 0;  // スライドショー変化させる為のカウンター
 //const words = ["abc","def","ghi","jkl"];
 let score = 0;
 let activeWords = []; // 現在画面にある単語群を管理
-var blinds = []; // 背景画を隠す為のブラインド(縦長の柱状のものを20個並べる)
-for (let ii = 0; ii < 20; ii++) {
+var blinds = []; // 背景画を隠す為のブラインド(縦長の柱状のものを blindNum個並べる)
+for (let ii = 0; ii < blindNum; ii++) {
     blinds[ii] = document.createElement('div');
     blinds[ii].className = 'opaque';
     blinds[ii].style.top = 0;
-    blinds[ii].style.left = (window.innerWidth*ii)/20 + 'px';
+    blinds[ii].style.width = 100/blindNum + '%'
+    blinds[ii].style.left = (window.innerWidth*ii)/blindNum + 'px';
     blinds[ii].style.opacity = "0.94";
     container.appendChild(blinds[ii]);
 }
+document.body.style.backgroundImage = 'url("'+images[imgIdx]+'")';
 let inputWord = ""
 // 1. ドロップする「単語」を一つ生成する関数
 function dropWord() {
@@ -47,7 +52,6 @@ let tut = Tut()
 document.addEventListener('keydown', (e) => {
     let kChar = tut.feed(e.keyCode);/* 複数キー入力によって確定した かな文字(一文字)を返す */
     //kChar = e.key
-    console.log("kChar : ", kChar);
     if (kChar == "") {
         word2Element.innerText = tut.buf; /* 入力しかけのテンポラリーアルファベット */
         return;
@@ -64,9 +68,9 @@ document.addEventListener('keydown', (e) => {
     const index = activeWords.findIndex(l => l.word === inputWord);
     if (index !== -1) {
         const target = activeWords[index];
-        let idx = Math.floor( (parseInt(target.element.style.left) + inputWord.length*32/2) *20 /window.innerWidth ); /* 落下単語が存在したあたりの ブラインドの番号を調べる */
+        let idx = Math.floor( (parseInt(target.element.style.left) + inputWord.length*32/2) *blindNum /window.innerWidth ); /* 落下単語が存在したあたりの ブラインドの番号を調べる */
         //console.log(" idx = ", idx);
-        if (idx >= 0 && idx < 20) {
+        if (idx >= 0 && idx < blindNum) {
             ;
         } else {
             idx=10;
@@ -76,7 +80,19 @@ document.addEventListener('keydown', (e) => {
         score += 10;
         inputWord = ""
         scoreElement.innerText = 'Score: ' + score;
-        blinds[idx].style.opacity = "0.2"; /* 該当ブラインドを透明にする */
+        blinds[idx].style.opacity = "0.4"; /* 該当ブラインドを透明にする */
+        bonusIdx++;
+        console.log(" bonusIdx = ", bonusIdx);
+        if (bonusIdx > blindNum+4) {
+            bonusIdx = 0;
+            if (++imgIdx >= images.length) {
+                imgIdx = 0;
+            }
+            document.body.style.backgroundImage = 'url("'+images[imgIdx]+'")';
+            for (let i = 0; i < blinds.length; i++) { blinds[i].style.opacity = "0.93"; }
+        } else if (bonusIdx > blindNum+2) { /* クリアした単語が 閾値を越えたら、ボーナスで全ブラインドを透明にする */
+            for (let i = 0; i < blinds.length; i++) { blinds[i].style.opacity = "0.1"; }
+        } 
     }
     wordElement.innerText = inputWord;
     word2Element.innerText = tut.buf; /* 入力しかけのテンポラリーアルファベット */

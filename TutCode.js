@@ -327,14 +327,20 @@ function Tut()
             if (this.buf.length == 0) {
                 return '^H';
             } else {
+                this.stroke--;
                 this.buf = this.buf.replace(/.$/,"") // JavaScriptのchop!に該当する関数がわからない…
+                if (this.stroke == 0) {
+		            this.tbl = n;
+		        } else {
+		            this.tbl = TblTable[this.buf];
+		        }
                 return '';
             }
         } else if (code == 27) { // Ctrl+G ESCAPE バッファクリアの特別扱い
             if (this.buf.length == 0) {
                 return '^G';
             } else {
-                this.buf = ''
+                this.tbl = this.stroke = 0;this.buf = '';
                 return '';
             }
         } else if (code < 32) {

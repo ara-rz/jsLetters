@@ -5,12 +5,11 @@ body {
     background-image: url(../../g/0_03.jpg);
 }
 .opaque { /* 背景画を隠す為の 柱状(半透明)ブラインドの定義 */
-	background: rgba(255,192,192); /* ,0.95); */
-	width: 5%; /* 要素の横幅を全体の1／20 */
+	background: rgba(255,192,192);
 	height: 100%;
     position: absolute;
     user-select: none;
-	z-index: 50; /* 要素を 背景画よりは前面に、落ちる文字列よりは背面に */
+	z-index: 50; /* ブラインドのz位置 : 背景画よりは 手前に、落ちる文字列よりは背面に */
 }
 
 #game-container {
