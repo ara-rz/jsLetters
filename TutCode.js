@@ -319,7 +319,6 @@ function Tut()
 {
     this.buf = '';
 	this.tbl = 0; // 現在使用しているテーブル番号 
-	this.stroke = 0; // 現在バッファにたまっているキーストローク数
 	this.feed = function(code) {
 		let n = code2n(code);
         //console.log("Code: ", code, " ", n);
@@ -327,14 +326,13 @@ function Tut()
             if (this.buf.length == 0) {
                 return '^H';
             } else {
-                this.stroke--;
                 this.buf = this.buf.replace(/.$/,"") // JavaScriptのchop!に該当する関数がわからない…
-                if (this.stroke == 1) {
+                if (this.buf.length == 1) {
 		            this.tbl = n;
-                } else if (this.stroke == 2 && tblTable[this.buf]) {
+                } else if (this.buf.length == 2 && tblTable[this.buf]) {
                     this.tbl = TblTable[this.buf];
                 } else {
-		            this.tbl = this.stroke = 0;this.buf = '';                    
+		            this.tbl = 0;this.buf = '';                    
 		        }
                 return '';
             }
@@ -342,7 +340,7 @@ function Tut()
             if (this.buf.length == 0) {
                 return '^G';
             } else {
-                this.tbl = this.stroke = 0;this.buf = '';
+                this.tbl = 0;this.buf = '';
                 return '';
             }
         } else if (code == 9 || code == 38) {// TAB もしくは 「↑」上方向キーで Play/Pause 
@@ -353,17 +351,16 @@ function Tut()
 		let c = Tbl[this.tbl].charAt(n);
 		if (c == '/') {
 		    this.buf += Code2char.charAt(n);
-		    if (this.stroke == 0) {
+		    if (this.buf.length == 1) {
 		        this.tbl = n;
-		    } else {
+		    } else if (TblTable[this.buf]) {
 		        this.tbl = TblTable[this.buf];
-		    }
-		    if (++this.stroke > 2) {
-		        this.tbl = this.stroke = 0;this.buf = '';
+		    } else {
+		        this.tbl = 0;this.buf = '';
 		    }
 		    return '';
 		} else {
-		  this.tbl = this.stroke = 0;this.buf = '';
+		  this.tbl = 0;this.buf = '';
 		  return c;
 		}
 	}
