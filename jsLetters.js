@@ -4,12 +4,15 @@ const wordElement = document.getElementById('word');
 const word2Element = document.getElementById('word2');
 const BlindN = 12;// 背景画像を隠す為の ブライド(縦長の柱状の覆い)の数
 const AnimInterval = 16.66;	//16.66msecに一回画面更新を呼ぶ(60fps)
-const DropWordCall = 60*2.2;//60fps前提で、2.2秒に一回 新しい単語を生成して落とす
+const DropWordCallN = 60*2.2;//60fps前提で、2.2秒に一回 新しい単語を生成して落とす
 //const words = ["abc","def","ghi","jkl"];//落とす単語群を定義(現在は 外部ファイル: words.js に記述)
 
-let imgIdx = 0;    // スライドショー表示する背景画の現在の番号
-let bonusIdx = 0;  // スライドショー変化させる為のカウンター
-
+let imageNo = 0;	// スライドショー表示する背景画の現在の番号
+let bonusIdx = 0;	// スライドショー変化させる為のカウンター
+let maxScore = 99;	// 今迄の最高得点
+let inputWord = ""
+let isPause = false; /* ポーズ中は "PAUSE"とかの文字列を入れる */
+let animCount = DropWordCallN;
 let score = 0;
 let activeWords = []; // 現在画面にある単語群を管理
 let blinds = []; // 背景画を隠す為のブラインド(縦長の柱状のものを BlindN個並べる)
@@ -28,11 +31,30 @@ window.onresize = function() {
         blinds[ii].style.width = 100/BlindN + '%'
     }
 }
-
-document.body.style.backgroundImage = 'url("'+images[imgIdx]+'")';
-let inputWord = ""
-let isPause = false; /* ポーズ中は "PAUSE"とかの文字列を入れる */
-let animCount = DropWordCall;
+let params = []
+if (document.cookie) {
+    document.cookie.split(';').forEach(function(v) {
+        let kv = v.replace(/ /g,'').split('=')
+        params[kv[0]] = kv[1]
+    })
+}
+if (window.location.search && window.location.search.length > 2) {
+    window.location.search.slice(1).split('&').forEach(function(v) {
+        let kv = v.split('=')
+        params[kv[0]] = kv[1];
+        //console.log("(("+kv[0]+"))"+kv[1])
+    })
+}
+if (params['maxScore']) maxScore = params['maxScore']
+if (params['imageNo'])  imageNo = params['imageNo']
+console.log("maxScore = ", maxScore, " // imageNo = ", imageNo);
+document.body.style.backgroundImage = 'url("'+images[imageNo]+'")';
+function saveCookie(key, value) {
+    let expDate = new Date('2027-08-14 09:29')
+    let str = key+'='+value+'; expires=' + expDate.toUTCString();
+    //console.log("saveCookie :: ", str);
+    document.cookie = str;
+}
 function animate() {
     if (isPause) {
         if (scoreElement.innerText != isPause) {
@@ -41,8 +63,8 @@ function animate() {
         return
     }
     let rmWords = [];
-    for (let i in activeWords) {
-        let w = activeWords[i];
+    for (const i in activeWords) {
+        const w = activeWords[i];
         let y = parseFloat(w.letr.style.top); // 現時点のY座標
         y += w.v;// 下に落とす 
         if (y > window.innerHeight + 300) { //充分下まで落ちたので消す
@@ -51,14 +73,14 @@ function animate() {
             w.letr.style.top = y + 'px';
         }
     }
-    for (let i in rmWords.reverse()) { // 配列を壊さない様に後ろから削除
-        let w = activeWords[rmWords[i]];
+    for (const i of rmWords.reverse()) { // 配列を壊さない様に後ろから削除
+        const w = activeWords[i];
         if (w.letr.parentNode) {
-            container.removeChild(w.letr);
+            container.removeChild(w.letr); // HTMLアクティブドキュメントのエレメントを除去
         }
-        activeWords.splice(rmWords[i], 1);
+        activeWords.splice(i, 1); // activeWords配列からも、消去
     }
-    if (++animCount > DropWordCall) {
+    if (++animCount > DropWordCallN) {
         dropWord();animCount = 0;
     }
 }       
@@ -91,7 +113,8 @@ function dropWord() {
 // 2. アニメーションを自前でやる。60fps前提に 1フレーム16.6msec くらいで定期的にコールする
 setInterval(animate, AnimInterval);
 
-let a2k = Tut() // アルファベット(ABC)の入力を元に、かな(漢字)に変換するメソッド。a2k.feed(keyCode)を連続して呼ぶと、漢字を返す
+let a2k = Tut() // アルファベット(ABC)入力を元に、漢字に変換するメソッド。a2k.feed(keyCode)を連続して呼ぶと、漢字を返す
+	//英語版lettersとして動かすには↑上記でなく ↓下記を有効にする
 //const C2a="#$%&'()*+,-./0123456789:;<=>?@abcdefghijklmnopqrstuvwxyz{|}"
 //let a2k = function(){this.buf='';this.feed=function(c){return c<35?"^H":C2a.charAt(c-35)};return this}()
 
@@ -109,7 +132,7 @@ document.addEventListener('keydown', (e) => {
     } else if (kChar == "^P") { // Pause or Play
         if (isPause) { // Pause中なので再開
             isPause = false;
-            scoreElement.innerText = 'Score: ' + score;
+            scoreElement.innerText = 'Score: ' + score + '/' + maxScore + " #" + imageNo;
             return;
         } else {	// 内部状態を [PAUSE] にして、アニメーションを止める
             scoreElement.innerText = isPause = '[PAUSE]';
@@ -134,7 +157,8 @@ document.addEventListener('keydown', (e) => {
     }
     let preScore = score;
     for (const j of rmWords.reverse()) { //消去予約した単語を消す(画面と配列の両方)(配列がおかしくならない様に、後ろから処理)
-        const blindI = Math.floor( (parseInt(activeWords[j].letr.style.left) + 16) *BlindN /window.innerWidth ); // 落下単語が存在したあたりの ブラインドの番号を調べる
+        let blindI = Math.floor( (parseInt(activeWords[j].letr.style.left) + 16) *BlindN /window.innerWidth ); // 落下単語が存在したあたりの ブラインドの番号を調べる
+        if (!blindI || blindI <= 0 || blindI >= BlindN) blindI = 0;
         let fl = parseFloat(blinds[blindI].style.opacity) - 0.3; // 該当ブラインドを透け透けにしてゆく
         if (fl < 0) fl = 0;
         blinds[blindI].style.opacity = fl.toString();
@@ -143,18 +167,25 @@ document.addEventListener('keydown', (e) => {
         bonusIdx++; score += 10;
     }
     if (preScore != score) { //スコアの変動があった場合(落下単語のどれかが消えた場合)
-//        console.log(" bonusIdx = ", bonusIdx);
+        //        console.log(" bonusIdx = ", bonusIdx);
+        if (score > maxScore) {
+            maxScore = score;
+            //console.log(" maxScore = ", maxScore);
+            //saveCookie('maxScore', maxScore);
+        }
         if (bonusIdx > BlindN+6) {
             bonusIdx = 0;
-            if (++imgIdx >= images.length) {
-                imgIdx = 0;
+            if (++imageNo >= images.length) {
+                imageNo = 0;
             }
-            document.body.style.backgroundImage = 'url("'+images[imgIdx]+'")'; // 背景画像を一個進める
+            saveCookie("imageNo", imageNo);
+            saveCookie("maxScore", maxScore);
+            document.body.style.backgroundImage = 'url("'+images[imageNo]+'")'; // 背景画像を一個進める
             for (const bl of blinds) { bl.style.opacity = "0.93" } //全ブラインドを「ほぼ不透明」にリセット            
         } else if (bonusIdx > BlindN+3) { // クリアした単語が 閾値を越えたら、ボーナスで全ブラインドを透明にする
             for (const bl of blinds) { bl.style.opacity = "0.1" }
-        } 
-        scoreElement.innerText = 'Score: ' + score;
+        }
+        scoreElement.innerText = 'Score: ' + score + '/' + maxScore + " #" + imageNo;
         inputWord = ""
     }
     wordElement.innerText = inputWord;
