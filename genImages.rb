@@ -7,10 +7,8 @@ dir = ARGV.shift
 dir+='/' if /\/$/ !~ dir
 h={}
 Dir[dir+'*.[jpw][pne]*'].each do |f|
-  key = f
-  if /(\d+)\./ =~ f
-    key = "%03d %s"%[$1.to_i,f] # 小賢しく、 _p1.jpg 〜 _p9.jpg 〜 _p10.jpg 〜 という順番でソートされる様にしてみる
-  end
+  key = f.sub(/(_[a-z])(\d{1,3})/){$1+"%03d"%($2.to_i)}
+  # 小賢しく、 _p1.jpg 〜 _p9.jpg 〜 _p10.jpg 〜 という順番でソートされる様にしてみる
   h[key] = f
 end
 puts 'const images = ['
