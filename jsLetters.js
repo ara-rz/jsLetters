@@ -1,12 +1,14 @@
 const container = document.getElementById('game-container');
 const scoreElement = document.getElementById('score');
+const lifeElement = document.getElementById('life');
 const wordElement = document.getElementById('word');
 const word2Element = document.getElementById('word2');
-const BlindN = 12;// 背景画像を隠す為の ブライド(縦長の柱状の覆い)の数
+const BlindN = 9;// 背景画像を隠す為の ブライド(縦長の柱状の覆い)の数
 const AnimInterval = 16.66;	//16.66msecに一回画面更新を呼ぶ(60fps)
 const DropWordCallN = 60*2.2;//60fps前提で、2.2秒に一回 新しい単語を生成して落とす
 //const words = ["abc","def","ghi","jkl"];//落とす単語群を定義(現在は 外部ファイル: words.js に記述)
-
+const TotalLife = 3;
+let life = TotalLife;// 最高得点記録は更新されました Score Record Updated!!!
 let imageNo = 0;	// スライドショー表示する背景画の現在の番号
 let bonusIdx = 0;	// スライドショー変化させる為のカウンター
 let maxScore = 99;	// 今迄の最高得点
@@ -22,7 +24,7 @@ for (let ii = 0; ii < BlindN; ii++) {
     blinds[ii].style.top = 0;
     blinds[ii].style.width = 100/BlindN + '%'
     blinds[ii].style.left = (window.innerWidth*ii)/BlindN + 'px';
-    blinds[ii].style.opacity = "0.93";//ほぼ不透明
+    blinds[ii].style.opacity = "0.91";//ほぼ不透明
     container.appendChild(blinds[ii]);
 }
 window.onresize = function() {
@@ -49,6 +51,7 @@ if (params['maxScore']) maxScore = params['maxScore']
 if (params['imageNo'])  imageNo = params['imageNo']
 console.log("maxScore = ", maxScore, " // imageNo = ", imageNo);
 document.body.style.backgroundImage = 'url("'+images[imageNo]+'")';
+lifeElement.innerText = 'Life : ' + life + ' / ' + TotalLife;
 function saveCookie(key, value) {
     let expDate = new Date('2027-08-14 09:29')
     let str = key+'='+value+'; expires=' + expDate.toUTCString();
@@ -57,8 +60,8 @@ function saveCookie(key, value) {
 }
 function animate() {
     if (isPause) {
-        if (scoreElement.innerText != isPause) {
-            scoreElement.innerText = isPause;
+        if (lifeElement.innerText != isPause) {
+            lifeElement.innerText = isPause;
         }
         return
     }
@@ -69,6 +72,13 @@ function animate() {
         y += w.v;// 下に落とす 
         if (y > window.innerHeight + 300) { //充分下まで落ちたので消す
             rmWords.push(i);
+            life--;
+            lifeElement.innerText = 'Life : ' + life + ' / ' + TotalLife;
+            if (life <= 0) {
+                console.log("Game Over");
+                lifeElement.innerText = isPause = '[GameOver]';
+                ;//messageBox()
+            }
         } else {
             w.letr.style.top = y + 'px';
         }
@@ -132,10 +142,10 @@ document.addEventListener('keydown', (e) => {
     } else if (kChar == "^P") { // Pause or Play
         if (isPause) { // Pause中なので再開
             isPause = false;
-            scoreElement.innerText = 'Score: ' + score + '/' + maxScore + " #" + imageNo;
+            lifeElement.innerText = 'Life : ' + life + ' / ' + TotalLife;
             return;
         } else {	// 内部状態を [PAUSE] にして、アニメーションを止める
-            scoreElement.innerText = isPause = '[PAUSE]';
+            lifeElement.innerText = isPause = '[PAUSE]';
             return;
         }
     } else {
@@ -159,7 +169,7 @@ document.addEventListener('keydown', (e) => {
     for (const j of rmWords.reverse()) { //消去予約した単語を消す(画面と配列の両方)(配列がおかしくならない様に、後ろから処理)
         let blindI = Math.floor( (parseInt(activeWords[j].letr.style.left) + 16) *BlindN /window.innerWidth ); // 落下単語が存在したあたりの ブラインドの番号を調べる
         if (!blindI || blindI <= 0 || blindI >= BlindN) blindI = 0;
-        let fl = parseFloat(blinds[blindI].style.opacity) - 0.3; // 該当ブラインドを透け透けにしてゆく
+        let fl = parseFloat(blinds[blindI].style.opacity) - 0.4; // 該当ブラインドを透け透けにしてゆく
         if (fl < 0) fl = 0;
         blinds[blindI].style.opacity = fl.toString();
         activeWords[j].letr.remove();	// 落下単語エレメントを 画面から削除        
@@ -179,9 +189,9 @@ document.addEventListener('keydown', (e) => {
                 imageNo = 0;
             }
             saveCookie("imageNo", imageNo);
-            saveCookie("maxScore", maxScore);
+            if (score == maxScore) saveCookie("maxScore", maxScore);
             document.body.style.backgroundImage = 'url("'+images[imageNo]+'")'; // 背景画像を一個進める
-            for (const bl of blinds) { bl.style.opacity = "0.93" } //全ブラインドを「ほぼ不透明」にリセット            
+            for (const bl of blinds) { bl.style.opacity = "0.91" } //全ブラインドを「ほぼ不透明」にリセット
         } else if (bonusIdx > BlindN+3) { // クリアした単語が 閾値を越えたら、ボーナスで全ブラインドを透明にする
             for (const bl of blinds) { bl.style.opacity = "0.1" }
         }

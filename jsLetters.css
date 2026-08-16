@@ -17,8 +17,9 @@ body {
     width: 100vw;
     height: 100vh;
 }
-#score { position: absolute; top: 8px; left: 10px; font-size: 24px; z-index: 200;}
-#word  { position: absolute; top: 8px; left: 360px; font-size: 64px; color: #3df; background-color: #511; z-index: 200;}
+#score { position: absolute; top: 8px;  left: 10px; font-size: 24px; background-color: #ddf; z-index: 200;}
+#life  { position: absolute; top: 42px; left: 10px; font-size: 24px; background-color: #efd; z-index: 200;}
+#word  { position: absolute; top: 8px; left: 360px; font-size: 48px; color: #3df; background-color: #511; z-index: 200;}
 #word2 { position: absolute; top: 8px; left: 300px; font-size: 32px; color: #243; background-color: #faf; z-index: 200;} /* 入力途中アルファベット表示用 */
 .letter {
     position: absolute;
@@ -28,8 +29,9 @@ body {
     z-index: 100;
 }
 .letterBase {
-    position: absolute;    
-    color: #2e0; /* 緑色 */
+    position: absolute;
+    color: #0d0; /* 緑色 */
+    background: rgba(110,100,200,0.5);
     z-index: 101;
 }
 .letterMatch {
